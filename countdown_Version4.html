@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Countdown — Schooled Countdown</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg1:#081226;
+      --bg2:#041029;
+      --accent1:#7dd3fc;
+      --accent2:#a78bfa;
+      --muted:#9aa7b2;
+      --card: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      background:
+        radial-gradient(800px 400px at 10% 20%, rgba(125,211,252,0.06), transparent),
+        radial-gradient(700px 360px at 90% 80%, rgba(167,139,250,0.05), transparent),
+        linear-gradient(180deg,var(--bg1),var(--bg2));
+      color:#e6eef6;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:28px;
+    }
+
+    .card{
+      width:100%;
+      max-width:980px;
+      border-radius:16px;
+      padding:28px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      box-shadow: 0 10px 40px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.04);
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap:20px;
+      align-items:center;
+    }
+
+    header{
+      grid-column:1 / -1;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+    .logo{
+      width:56px;height:56px;border-radius:12px;
+      background: linear-gradient(90deg,var(--accent1),var(--accent2));
+      display:flex;align-items:center;justify-content:center;
+      font-weight:900;color:#04212b;font-size:22px;
+      box-shadow: 0 8px 22px rgba(96,165,250,0.12);
+    }
+    h1{font-size:20px;margin:0}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+
+    .countdown{
+      padding:22px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.03);
+      display:flex;flex-direction:column;gap:18px;
+    }
+
+    .time-grid{
+      display:grid;
+      grid-template-columns: repeat(4,1fr);
+      gap:12px;
+    }
+    .tile{
+      background:var(--card);
+      border-radius:12px;padding:18px;
+      text-align:center;
+      min-width:0;
+      box-shadow: 0 8px 20px rgba(2,6,23,0.45);
+      transform-origin:center;
+      transition:transform 260ms ease;
+    }
+    .tile.pulse{ transform: translateY(-6px) scale(1.02); }
+    .num{font-weight:900;font-size:36px;line-height:1}
+    .label{font-size:12px;color:var(--muted);margin-top:6px;letter-spacing:0.6px}
+
+    .right{
+      display:flex;flex-direction:column;gap:18px;
+      align-items:stretch;
+    }
+
+    .progress-wrap{
+      padding:16px;border-radius:12px;background:linear-gradient(180deg, rgba(0,0,0,0.02), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.02);
+    }
+
+    .progress-bar{
+      height:14px;background:rgba(255,255,255,0.04);border-radius:999px;
+      overflow:hidden;position:relative;backdrop-filter: blur(4px);
+    }
+    .progress-fill{
+      height:100%;width:0;background:linear-gradient(90deg,var(--accent1),var(--accent2));
+      border-radius:999px;transition:width 700ms cubic-bezier(.2,.9,.2,1);
+      box-shadow: 0 10px 30px rgba(99,102,241,0.08);
+    }
+    .meta{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:10px}
+
+    .finished{
+      display:none;
+      align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:12px;border:1px solid rgba(255,255,255,0.02);
+      text-align:center;
+    }
+    .finished.show{display:flex}
+
+    .confetti-canvas{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:60}
+
+    footer.notice{grid-column:1 / -1;color:var(--muted);font-size:13px;margin-top:8px;text-align:center}
+    @media (max-width:900px){
+      .card{grid-template-columns:1fr;padding:18px}
+      .right{order:2}
+      .num{font-size:28px}
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .progress-fill{transition:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="card" role="application" aria-label="Countdown until school is over">
+    <header>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="logo" aria-hidden="true">🎒</div>
+        <div>
+          <h1>Countdown — Schooled Countdown</h1>
+          <p class="lead">Counting down to June 4, 2026 at 10:45 (local time)</p>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:13px;color:var(--muted)">Current time</div>
+        <div id="now" style="font-weight:700;font-size:14px"></div>
+      </div>
+    </header>
+
+    <section class="countdown" aria-live="polite">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px">
+        <div>
+          <div style="font-size:13px;color:var(--muted)">Target</div>
+          <div id="targetLabel" style="font-weight:800">June 4, 2026 — 10:45</div>
+        </div>
+        <div style="text-align:right;color:var(--muted);font-size:13px">
+          <div id="tzLabel"></div>
+          <div id="untilLabel" style="font-weight:600"></div>
+        </div>
+      </div>
+
+      <div class="time-grid" role="list" id="timeGrid">
+        <div class="tile" role="listitem" aria-label="Days remaining">
+          <div class="num" id="days">0</div>
+          <div class="label">Days</div>
+        </div>
+        <div class="tile" role="listitem" aria-label="Hours remaining">
+          <div class="num" id="hours">00</div>
+          <div class="label">Hours</div>
+        </div>
+        <div class="tile" role="listitem" aria-label="Minutes remaining">
+          <div class="num" id="minutes">00</div>
+          <div class="label">Minutes</div>
+        </div>
+        <div class="tile" role="listitem" aria-label="Seconds remaining">
+          <div class="num" id="seconds">00</div>
+          <div class="label">Seconds</div>
+        </div>
+      </div>
+
+      <div class="finished" id="finishedBox" aria-hidden="true">
+        <div style="font-weight:900;font-size:22px">🎉 School is over!</div>
+        <div style="color:var(--muted)">Enjoy your break — you've made it.</div>
+      </div>
+    </section>
+
+    <aside class="right" aria-hidden="true">
+      <div class="progress-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">Getting closer</div>
+          <div id="pctLabel" style="font-weight:700">0%</div>
+        </div>
+        <div class="progress-bar" style="margin-top:12px">
+          <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+        <div class="meta"><span id="fromLabel">Now</span><span id="toLabel">Target</span></div>
+      </div>
+    </aside>
+
+    <footer class="notice">This page is fixed to the target date/time and cannot be changed from the UI.</footer>
+  </div>
+
+  <canvas class="confetti-canvas" id="confetti"></canvas>
+
+  <script>
+    // Fixed target: June 4, 2026 10:45 local time
+    const TARGET = new Date(2026, 5, 4, 10, 45, 0, 0); // month 0-based: 5 = June
+
+    // Fixed school start date (progress baseline): August 25, 2025
+    const START = new Date(2025, 7, 25, 0, 0, 0, 0); // 7 = August, local time (midnight)
+
+    const daysEl = document.getElementById('days');
+    const hoursEl = document.getElementById('hours');
+    const minsEl = document.getElementById('minutes');
+    const secsEl = document.getElementById('seconds');
+    const nowEl = document.getElementById('now');
+    const targetLabel = document.getElementById('targetLabel');
+    const tzLabel = document.getElementById('tzLabel');
+    const untilLabel = document.getElementById('untilLabel');
+    const pctLabel = document.getElementById('pctLabel');
+    const progressFill = document.getElementById('progressFill');
+    const finishedBox = document.getElementById('finishedBox');
+    const timeGrid = document.getElementById('timeGrid');
+    const fromLabel = document.getElementById('fromLabel');
+    const toLabel = document.getElementById('toLabel');
+
+    function formatLocal(dt){
+      return dt.toLocaleString([], {year:'numeric',month:'short',day:'numeric', hour:'2-digit',minute:'2-digit'});
+    }
+
+    function updateNow(){
+      const now = new Date();
+      nowEl.textContent = now.toLocaleString();
+    }
+
+    function updateTargetLabel(){
+      targetLabel.textContent = formatLocal(TARGET);
+      tzLabel.textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      toLabel.textContent = formatLocal(TARGET);
+      fromLabel.textContent = formatLocal(START);
+    }
+
+    function calcProgress(now, from, to){
+      // Return percentage 0..100 of how far from 'from' -> 'to' we are, based on 'now'.
+      if (to <= from) return 100;
+      if (now <= from) return 0;
+      if (now >= to) return 100;
+      const total = to - from;
+      const done = (now - from) / total;
+      return Math.round(Math.max(0, Math.min(1, done)) * 100);
+    }
+
+    function updateCountdown(){
+      const now = new Date();
+      updateNow();
+
+      let diff = TARGET - now;
+      if (diff <= 0){
+        // End reached
+        daysEl.textContent = '0';
+        hoursEl.textContent = '00';
+        minsEl.textContent = '00';
+        secsEl.textContent = '00';
+        pctLabel.textContent = '100%';
+        progressFill.style.width = '100%';
+        showFinishedOnce();
+        return;
+      }
+
+      const s = Math.floor(diff/1000);
+      const days = Math.floor(s / (3600*24));
+      const hours = Math.floor((s % (3600*24)) / 3600);
+      const minutes = Math.floor((s % 3600) / 60);
+      const seconds = Math.floor(s % 60);
+
+      daysEl.textContent = String(days);
+      hoursEl.textContent = String(hours).padStart(2,'0');
+      minsEl.textContent = String(minutes).padStart(2,'0');
+      secsEl.textContent = String(seconds).padStart(2,'0');
+
+      untilLabel.textContent = days>1 ? `${days} days left` : days===1 ? '1 day left' : hours>0 ? `${hours} hours left` : `${minutes} minutes left`;
+
+      const pct = calcProgress(now, START, TARGET);
+      pctLabel.textContent = pct + '%';
+      progressFill.style.width = pct + '%';
+
+      // subtle pulse on changing tile
+      pulseTiles();
+    }
+
+    let lastNums = {d:null,h:null,m:null,s:null};
+    function pulseTiles(){
+      const d = daysEl.textContent, h = hoursEl.textContent, m = minsEl.textContent, s = secsEl.textContent;
+      if (d !== lastNums.d){
+        flashTile(0);
+        lastNums.d = d;
+      }
+      if (h !== lastNums.h){
+        flashTile(1);
+        lastNums.h = h;
+      }
+      if (m !== lastNums.m){
+        flashTile(2);
+        lastNums.m = m;
+      }
+      if (s !== lastNums.s){
+        flashTile(3);
+        lastNums.s = s;
+      }
+    }
+    function flashTile(idx){
+      const tile = timeGrid.children[idx];
+      if (!tile) return;
+      tile.classList.add('pulse');
+      setTimeout(()=> tile.classList.remove('pulse'), 360);
+    }
+
+    let finishedShown = false;
+    function showFinishedOnce(){
+      if (finishedShown) return;
+      finishedShown = true;
+      finishedBox.classList.add('show');
+      finishedBox.setAttribute('aria-hidden','false');
+      launchConfetti(160);
+    }
+
+    // initialize
+    (function init(){
+      updateTargetLabel();
+      updateNow();
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+      setInterval(updateNow, 15000);
+    })();
+
+
+    /* Confetti canvas animation */
+    function launchConfetti(particles = 160){
+      const canvas = document.getElementById('confetti');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let w = canvas.width = innerWidth;
+      let h = canvas.height = innerHeight;
+      const colors = ['#7dd3fc','#60a5fa','#a78bfa','#f472b6','#f59e0b','#34d399'];
+      const parts = [];
+      for (let i=0;i<particles;i++){
+        parts.push({
+          x: Math.random()*w,
+          y: Math.random()*-h*0.2,
+          r: 6+Math.random()*10,
+          d: Math.random()*40+10,
+          vx: (Math.random()-0.5)*6,
+          vy: 2+Math.random()*6,
+          color: colors[Math.floor(Math.random()*colors.length)],
+          tilt: Math.random()*Math.PI,
+          spin: (Math.random()-0.5)*0.25
+        });
+      }
+      const gravity = 0.12;
+      let t = 0;
+      function resize(){ w = canvas.width = innerWidth; h = canvas.height = innerHeight; }
+      window.addEventListener('resize', resize);
+      function frame(){
+        ctx.clearRect(0,0,w,h);
+        for (let p of parts){
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += gravity * (p.d/40);
+          p.tilt += p.spin;
+          ctx.save();
+          ctx.translate(p.x,p.y);
+          ctx.rotate(p.tilt);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r*1.6);
+          ctx.restore();
+        }
+        t++;
+        if (t < 420){
+          requestAnimationFrame(frame);
+        }else{
+          ctx.clearRect(0,0,w,h);
+          window.removeEventListener('resize', resize);
+        }
+      }
+      frame();
+    }
+  </script>
+</body>
+</html>
